@@ -1,3 +1,10 @@
+;;
+;; effects.scm
+;; 2019-8-18 v1.03
+;;
+;; modified for Gauche ( https://github.com/Hamayama/Gauche-effects )
+;; ( the original is https://github.com/ayatoy/racket-effects )
+;;
 (define-module effects
   (use gauche.partcont)
   (use gauche.parameter)
@@ -17,7 +24,7 @@
   ;; use native reset/shift
   (define testA test*)]
  [else
-  ;; use emurator reset/shift
+  ;; use emulator of reset/shift
   (define dynamic-wind emu-dynamic-wind)
   (define call/cc      emu-call/cc)
   (define call/pc      emu-call/pc)

@@ -18,7 +18,7 @@
    ( https://github.com/shirok/Gauche/issues/477 )  
    このため、emu-dynamic.scm というモジュールを作って、動作をエミュレートしています。  
    (このモジュールを使用する場合、Gauche 本体の継続や動的環境処理と組み合わせると、  
-   正常に動作しない場合があるため、注意が必要です)
+   正常に動作しない場合があるため、注意してください)
 
 2. オリジナルの effects では、prompt-at/control-at を使用していますが、  
    Gauche には存在しないため、reset/shift に置き換えています。  

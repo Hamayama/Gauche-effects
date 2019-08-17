@@ -1,7 +1,6 @@
-;; -*- coding: utf-8 -*-
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-16 v3.14
+;; 2019-8-17 v3.15
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -83,6 +82,7 @@
       (after1)
       (apply values ret))))
 
+;; travel dynamic-chain
 (define (%travel dp-from dp-to)
   (define (common-tail x y)
     (let ([lx (length x)] [ly (length y)])
@@ -107,6 +107,7 @@
         ((~ (car dp) 'before))
         (set! *dynamic-chain* dp)))))
 
+;; cut dynamic-chain
 (define (%dc-cut dp-from dp-to)
   (let loop ([ret '()] [dp dp-to])
     (if (or (null? dp) (eq? dp dp-from))
@@ -154,6 +155,7 @@
        (let ([emu-k (^ args
                        (let ([dp-k *dynamic-chain*])
                          (dbg-print 2 "emu-pc-k ~s~%" dbg-id)
+                         ;(%travel dp-k dp-pc)
                          (%travel dp-k (append dc-part dp-k))
                          (receive ret (emu-reset :name "emu-reset-1"
                                                  (apply real-k args))

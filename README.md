@@ -7,7 +7,7 @@
 
 ## 内容
 - https://www.eff-lang.org/  
-  の内容を実装したものとのことです。
+  の algebraic effects を scheme で実装したものになります。
 - examples フォルダのサンプルは、  
   https://www.eff-lang.org/try/  
   の項目に対応しています。
@@ -33,6 +33,7 @@
 
 ## 履歴
 - 2019-8-17  v1.00 (初版)
+- 2019-8-17  v1.01 emu-dynamic.scmをv3.15に更新
 
 
 (2019-8-17)

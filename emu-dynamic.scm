@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-17 v3.15
+;; 2019-8-17 v3.16
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -64,11 +64,11 @@
          [dbg-id  (gensym)]
          [before1 (^[]
                     (inc! count1)
-                    (dbg-print 2 "~a~s before ~d~%" dbg-name dbg-id count1)
+                    (dbg-print 2 "~a ~s before ~d~%" dbg-name dbg-id count1)
                     (before))]
          [after1  (^[]
                     (inc! count2)
-                    (dbg-print 2 "~a~s after  ~d~%" dbg-name dbg-id count2)
+                    (dbg-print 2 "~a ~s after  ~d~%" dbg-name dbg-id count2)
                     (when (> count2 count1)
                       (dbg-print 1 "warning: emu-dynamic-wind calls 'after' without 'before'. ~a (b=~d, a=~d)~%" dbg-name count1 count2)
                       (dbg-print-chain 1))
@@ -115,13 +115,14 @@
       (loop (cons (car dp) ret) (cdr dp)))))
 
 (define (emu-call/cc proc)
-  (let ([dp-cc *dynamic-chain*]
-        [rp-cc *reset-chain*])
-    (dbg-print 2 "emu-call/cc~%")
+  (let ([dp-cc  *dynamic-chain*]
+        [rp-cc  *reset-chain*]
+        [dbg-id (gensym)])
+    (dbg-print 2 "emu-call/cc ~s~%" dbg-id)
     (call/cc
      (^[real-k]
        (let ([emu-k (^ args
-                       (dbg-print 2 "emu-cc-k~%")
+                       (dbg-print 2 "emu-cc-k ~s~%" dbg-id)
                        (%travel *dynamic-chain* dp-cc)
                        (set! *reset-chain* rp-cc)
                        (apply real-k args))])

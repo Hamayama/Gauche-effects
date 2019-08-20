@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-17 v3.16
+;; 2019-8-20 v3.17
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -16,6 +16,7 @@
 ;;    proc is (^[k] expr ...) and k is partial continuation
 ;;
 ;;  (emu-reset expr ...)
+;;    make a boundary of partial continuation
 ;;
 ;;  (emu-shift k expr ...)
 ;;    this is equivalent to (emu-call/pc (^[k] expr ...))
@@ -49,6 +50,7 @@
 (define *dynamic-chain* '())
 (define *reset-chain*   (list (make <reset-info> :dbg-name "root")))
 
+;; for debug
 (define *dbg-level* 1) ; (bitwise setting (e.g. 3 is warning+info)
 ;                      ;   =0:none, =1:warning, =2:info, =8:special)
 (define (dbg-print dbg-level . args)
@@ -82,16 +84,18 @@
       (after1)
       (apply values ret))))
 
+;; get a common tail of two lists
+(define (%common-tail x y)
+  (let ([lx (length x)] [ly (length y)])
+    (let loop ([x (if (> lx ly) (list-tail x (- lx ly)) x)]
+               [y (if (> ly lx) (list-tail y (- ly lx)) y)])
+      (if (eq? x y)
+        x
+        (loop (cdr x) (cdr y))))))
+
 ;; travel dynamic-chain
 (define (%travel dp-from dp-to)
-  (define (common-tail x y)
-    (let ([lx (length x)] [ly (length y)])
-      (let loop ([x (if (> lx ly) (list-tail x (- lx ly)) x)]
-                 [y (if (> ly lx) (list-tail y (- ly lx)) y)])
-        (if (eq? x y)
-          x
-          (loop (cdr x) (cdr y))))))
-  (let ([tail (common-tail dp-from dp-to)])
+  (let ([tail (%common-tail dp-from dp-to)])
     ;; call afters and update *dynamic-chain*
     (let loop ([dp dp-from])
       (unless (eq? dp tail)
@@ -109,10 +113,8 @@
 
 ;; cut dynamic-chain
 (define (%dc-cut dp-from dp-to)
-  (let loop ([ret '()] [dp dp-to])
-    (if (or (null? dp) (eq? dp dp-from))
-      (reverse ret)
-      (loop (cons (car dp) ret) (cdr dp)))))
+  (take dp-to (- (length dp-to)
+                 (length (%common-tail dp-from dp-to)))))
 
 (define (emu-call/cc proc)
   (let ([dp-cc  *dynamic-chain*]

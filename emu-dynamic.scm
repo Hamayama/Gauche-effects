@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-20 v3.17
+;; 2019-8-22 v3.18
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -164,9 +164,9 @@
                                                  (apply real-k args))
                            (%travel *dynamic-chain* dp-k)
                            (apply values ret))))])
-         (receive ret (proc emu-k)
-           (%travel dp-pc dp-reset)
-           (apply values ret)))))))
+         ;; travel must be done before calling proc
+         (%travel dp-pc dp-reset)
+         (proc emu-k))))))
 
 (define-syntax emu-shift
   (syntax-rules ()
@@ -232,6 +232,18 @@
             (emu-shift k (set! k1 k))
             (emu-shift k 1000))
            (k1)))
+
+  (testA "reset/shift + parameterize 1"
+         "010"
+         (with-output-to-string
+           (^[]
+             (define p (make-parameter 0))
+             (display (p))
+             (emu-reset
+              (emu-parameterize ([p 1])
+                (display (p))
+                ;; 'shift' escapes from 'reset' before done
+                (emu-shift k (display (p))))))))
 
   (testA "reset/shift + call/cc 1"
          "[r01][r02][r02][r03]()(root)"

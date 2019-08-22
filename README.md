@@ -39,6 +39,7 @@
 - 2019-8-18  v1.03 コメント追加等
 - 2019-8-20  v1.04 emu-dynamic.scmをv3.17に更新
 - 2019-8-22  v1.05 probability.scmのテストを変更
+- 2019-8-22  v1.06 emu-dynamic.scmをv3.18に更新(shiftはまずresetを脱出する)
 
 
 (2019-8-22)

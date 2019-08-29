@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-29 v4.00
+;; 2019-8-29 v4.01
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -145,8 +145,8 @@
 
 (define (emu-call/pc proc)
   (let* ([dp-pc    *dynamic-chain*]
-         [rp-cc    *reset-chain*]
-         [dp-reset (~ (car rp-cc) 'dynamic-chain)]
+         [rp-pc    *reset-chain*]
+         [dp-reset (~ (car rp-pc) 'dynamic-chain)]
          [dc-part  (%dc-cut dp-reset dp-pc)]
          [dbg-id   (gensym)])
     (dbg-print 2 "emu-call/pc ~s~%" dbg-id)
@@ -168,7 +168,7 @@
          (%travel dp-pc dp-reset)
          (pop! *reset-chain*)
          (receive ret (proc emu-k)
-           (set! *reset-chain* rp-cc)
+           (set! *reset-chain* rp-pc)
            (apply values ret)))))))
 
 (define-syntax emu-shift

@@ -43,6 +43,7 @@
 - 2019-8-29  v1.07 emu-dynamic.scmをv4.00に更新(emu-call/pcの処理見直し)
 - 2019-8-29  v1.08 emu-dynamic.scmをv4.01に更新(変数名修正)
 - 2019-8-30  v1.09 emu-dynamic.scmをv4.03に更新(emu-call/pcの処理修正)
+- 2019-8-30  v1.10 emu-dynamic.scmをv4.04に更新(emu-call/pcの処理見直し)
 
 
 (2019-8-30)

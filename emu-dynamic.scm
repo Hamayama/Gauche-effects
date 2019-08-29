@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-22 v3.18
+;; 2019-8-29 v4.00
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -41,7 +41,6 @@
 (define-class <dynamic-winder> ()
   ((before        :init-keyword :before)
    (after         :init-keyword :after)
-   (reset-chain   :init-form    *reset-chain*)
    (dbg-name      :init-keyword :dbg-name)))
 (define-class <reset-info> ()
   ((dynamic-chain :init-form    *dynamic-chain*)
@@ -145,13 +144,11 @@
      (%emu-reset (^[] expr ...))]))
 
 (define (emu-call/pc proc)
-  (let* ([dp-reset  (~ (car *reset-chain*) 'dynamic-chain)]
-         [dp-pc     *dynamic-chain*]
-         [dp-reset2 (if (null? dp-pc)
-                      '()
-                      (~ (car (~ (car dp-pc) 'reset-chain)) 'dynamic-chain))]
-         [dc-part   (%dc-cut dp-reset2 dp-pc)]
-         [dbg-id    (gensym)])
+  (let* ([dp-pc    *dynamic-chain*]
+         [rp-cc    *reset-chain*]
+         [dp-reset (~ (car rp-cc) 'dynamic-chain)]
+         [dc-part  (%dc-cut dp-reset dp-pc)]
+         [dbg-id   (gensym)])
     (dbg-print 2 "emu-call/pc ~s~%" dbg-id)
     ((with-module gauche.internal %call/pc)
      (^[real-k]
@@ -160,13 +157,19 @@
                          (dbg-print 2 "emu-pc-k ~s~%" dbg-id)
                          ;(%travel dp-k dp-pc)
                          (%travel dp-k (append dc-part dp-k))
-                         (receive ret (emu-reset :name "emu-reset-1"
-                                                 (apply real-k args))
+                         (receive ret (emu-reset
+                                       :name "emu-reset-1"
+                                       ;; clear dynamic-chain of reset-point
+                                       (set! (~ (car *reset-chain*) 'dynamic-chain) '())
+                                       (apply real-k args))
                            (%travel *dynamic-chain* dp-k)
                            (apply values ret))))])
-         ;; travel must be done before calling proc
+         ;; 'proc' is executed on the outside of 'reset'
          (%travel dp-pc dp-reset)
-         (proc emu-k))))))
+         (pop! *reset-chain*)
+         (receive ret (proc emu-k)
+           (set! *reset-chain* rp-cc)
+           (apply values ret)))))))
 
 (define-syntax emu-shift
   (syntax-rules ()
@@ -242,7 +245,7 @@
              (emu-reset
               (emu-parameterize ([p 1])
                 (display (p))
-                ;; 'shift' escapes from 'reset' before done
+                ;; expr of 'shift' is executed on the outside of 'reset'
                 (emu-shift k (display (p))))))))
 
   (testA "reset/shift + call/cc 1"
@@ -306,6 +309,25 @@
                (^[] (display "[d01]"))
                (^[] (emu-shift k (set! k1 k))
                     (emu-shift k (set! k2 k)))
+               (^[] (display "[d02]"))))
+             (k1)
+             (k2)
+             (k2))))
+
+  (testA "dynamic-wind + reset/shift 3-B"
+         "[d01][d02][d01][d11][d12][d02][d01][d11][d12][d02][d01][d11][d12][d02]"
+         (with-output-to-string
+           (^[]
+             (define k1 #f)
+             (define k2 #f)
+             (emu-reset
+              (emu-dynamic-wind
+               (^[] (display "[d01]"))
+               (^[] (emu-shift k (set! k1 k))
+                    (emu-dynamic-wind
+                     (^[] (display "[d11]"))
+                     (^[] (emu-shift k (set! k2 k)))
+                     (^[] (display "[d12]"))))
                (^[] (display "[d02]"))))
              (k1)
              (k2)

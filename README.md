@@ -40,6 +40,7 @@
 - 2019-8-20  v1.04 emu-dynamic.scmをv3.17に更新
 - 2019-8-22  v1.05 probability.scmのテストを変更
 - 2019-8-22  v1.06 emu-dynamic.scmをv3.18に更新(shiftはまずresetを脱出する)
+- 2019-8-29  v1.07 emu-dynamic.scmをv4.00に更新(emu-call/pcの処理見直し)
 
 
-(2019-8-22)
+(2019-8-29)

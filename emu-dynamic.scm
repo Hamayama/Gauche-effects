@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-29 v4.01
+;; 2019-8-30 v4.03
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -159,8 +159,8 @@
                          (%travel dp-k (append dc-part dp-k))
                          (receive ret (emu-reset
                                        :name "emu-reset-1"
-                                       ;; clear dynamic-chain of reset-point
-                                       (set! (~ (car *reset-chain*) 'dynamic-chain) '())
+                                       ;; modify dynamic-chain of reset-point
+                                       (set! (~ (car *reset-chain*) 'dynamic-chain) dp-k)
                                        (apply real-k args))
                            (%travel *dynamic-chain* dp-k)
                            (apply values ret))))])
@@ -332,6 +332,28 @@
              (k1)
              (k2)
              (k2))))
+
+  (testA "dynamic-wind + reset/shift 3-C"
+         "[d01][d02][d21][d01][d11][d12][d02][d01][d11][d12][d02][d01][d11][d12][d02][d22]"
+         (with-output-to-string
+           (^[]
+             (define k1 #f)
+             (define k2 #f)
+             (emu-reset
+              (emu-dynamic-wind
+               (^[] (display "[d01]"))
+               (^[] (emu-shift k (set! k1 k))
+                    (emu-dynamic-wind
+                     (^[] (display "[d11]"))
+                     (^[] (emu-shift k (set! k2 k)))
+                     (^[] (display "[d12]"))))
+               (^[] (display "[d02]"))))
+             (emu-dynamic-wind
+              (^[] (display "[d21]"))
+              (^[] (k1)
+                   (k2)
+                   (k2))
+              (^[] (display "[d22]"))))))
 
   (testA "dynamic-wind + reset/shift 4"
          "[d01][d11][d12][d02][d11][d12]"

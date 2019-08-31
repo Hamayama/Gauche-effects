@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-30 v4.04
+;; 2019-8-31 v4.05
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -160,14 +160,13 @@
                                        ;(%travel dp-k dp-pc)
                                        (%travel dp-k (append dc-part dp-k))
                                        (apply real-k args))
+                           (dbg-print 2 "emu-pc-k-after ~s~%" dbg-id)
                            (%travel *dynamic-chain* dp-k)
                            (apply values ret))))])
-         ;; 'proc' is executed on the outside of 'reset'
+         ;; 'proc' must be executed on the outside of 'reset'
+         ;; (incomplete for now)
          (%travel dp-pc dp-reset)
-         (pop! *reset-chain*)
-         (receive ret (proc emu-k)
-           (set! *reset-chain* rp-pc)
-           (apply values ret)))))))
+         (proc emu-k))))))
 
 (define-syntax emu-shift
   (syntax-rules ()
@@ -233,6 +232,22 @@
             (emu-shift k (set! k1 k))
             (emu-shift k 1000))
            (k1)))
+
+  (testA "reset/shift combination 1"
+         1000
+         (begin
+           (define k1 #f)
+           (define k2 #f)
+           (define k3 #f)
+           (emu-reset
+            (emu-shift k (set! k1 k)
+                       (emu-shift k (set! k2 k)
+                                  (emu-shift k (set! k3 k))))
+            1000)
+           (k1)
+           ;(k2)
+           ;(k3)
+           ))
 
   (testA "reset/shift + parameterize 1"
          "010"

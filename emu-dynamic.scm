@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-8-31 v4.05
+;; 2019-9-8 v4.06
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -248,6 +248,19 @@
            ;(k2)
            ;(k3)
            ))
+
+  (testA "reset/shift + values 1"
+         '(1 2 3)
+         (values->list (emu-reset (values 1 2 3))))
+
+  (testA "reset/shift + values 2"
+         '(1 2 3)
+         (begin
+           (define k1 #f)
+           (emu-reset
+            (emu-shift k (set! k1 k))
+            (values 1 2 3))
+           (values->list (k1))))
 
   (testA "reset/shift + parameterize 1"
          "010"

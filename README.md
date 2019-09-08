@@ -24,6 +24,9 @@
    Gauche には存在しないため、reset/shift に置き換えています。  
    このため、複数の機能を組み合わせた場合に、動作しないケースがあるかもしれません。
 
+3. 関連情報等  
+   https://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3A%E9%83%A8%E5%88%86%E7%B6%99%E7%B6%9A%E3%81%A8%E5%8B%95%E7%9A%84%E7%92%B0%E5%A2%83%E3%81%AE%E5%AE%9F%E9%A8%93
+
 
 ## 環境等
 - OS

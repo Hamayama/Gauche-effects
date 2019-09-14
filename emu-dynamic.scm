@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-9-8 v4.06
+;; 2019-9-15 v4.07
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -127,14 +127,18 @@
                        (%travel *dynamic-chain* dp-cc)
                        (set! *reset-chain* rp-cc)
                        (apply real-k args))])
-         (proc emu-k))))))
+         (receive ret (proc emu-k)
+           (dbg-print 2 "emu-call/cc-after ~s~%" dbg-id)
+           (apply values ret)))))))
 
 (define (%emu-reset thunk :optional (dbg-name ""))
-  (dbg-print 2 "%emu-reset ~a~%" dbg-name)
-  (push! *reset-chain* (make <reset-info> :dbg-name dbg-name))
-  (receive ret (reset (thunk))
-    (pop! *reset-chain*)
-    (apply values ret)))
+  (let ([dbg-id (gensym)])
+    (dbg-print 2 "%emu-reset ~a ~s~%" dbg-name dbg-id)
+    (push! *reset-chain* (make <reset-info> :dbg-name dbg-name))
+    (receive ret (reset (thunk))
+      (pop! *reset-chain*)
+      (dbg-print 2 "%emu-reset-after ~a ~s~%" dbg-name dbg-id)
+      (apply values ret))))
 
 (define-syntax emu-reset
   (syntax-rules (:name)
@@ -166,7 +170,9 @@
          ;; 'proc' must be executed on the outside of 'reset'
          ;; (incomplete for now)
          (%travel dp-pc dp-reset)
-         (proc emu-k))))))
+         (receive ret (proc emu-k)
+           (dbg-print 2 "emu-call/pc-after ~s~%" dbg-id)
+           (apply values ret)))))))
 
 (define-syntax emu-shift
   (syntax-rules ()

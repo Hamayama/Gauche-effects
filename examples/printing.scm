@@ -16,7 +16,7 @@
 ;;
 ;; perform (Print "Hello, world!\n")
 ;;
-(testA
+(test-handler
  "print 1"
  "Hello, world!\n"
  (with-output-to-string
@@ -34,7 +34,7 @@
 ;;   | effect (Print msg) k ->
 ;;     perform (Print ("I see you tried to print " ^ msg ^ ". Not so fast!\n"))
 ;;
-(testA
+(test-handler
  "print 2"
  "I see you tried to print A. Not so fast!\n"
  (with-output-to-string
@@ -62,7 +62,7 @@
 ;;     perform (Print ("I see you tried to print " ^ msg ^ ". Okay, you may.\n"));
 ;;     continue k ()
 ;;
-(testA
+(test-handler
  "print 3"
  (string-append
   "I see you tried to print A. Okay, you may.\n"
@@ -107,7 +107,7 @@
 ;;   perform (Print "C");
 ;;   perform (Print "D")
 ;;
-(testA
+(test-handler
  "collect"
  #(() "ABCD")
  (handle-with collect

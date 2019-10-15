@@ -59,7 +59,7 @@
 ;;   let y = (if decide () then 0 else 5) in
 ;;   x - y
 ;;
-(testA
+(test-handler
  "choose-true"
  10
  (handle-with choose-true
@@ -73,7 +73,7 @@
 ;;   let y = (if decide () then 0 else 5) in
 ;;   x - y
 ;;
-(testA
+(test-handler
  "choose-max"
  20
  (handle-with choose-max
@@ -87,7 +87,7 @@
 ;;   let y = (if decide () then 0 else 5) in
 ;;   x - y
 ;;
-(testA
+(test-handler
  "choose-all"
  '(10 5 20 15)
  (handle-with choose-all
@@ -161,7 +161,7 @@
 ;; with backtrack handle
 ;;   pythagorean 5 15
 ;;
-(testA
+(test-handler
  "pythagorean backtrack"
  '#(9 12 15)
  (handle-with backtrack
@@ -171,7 +171,7 @@
 ;; with choose_all handle
 ;;   pythagorean 3 4
 ;;
-(testA
+(test-handler
  "pythagorean choose_all 1"
  '(#(3 4 5))
  (handle-with choose-all
@@ -181,7 +181,7 @@
 ;; with choose_all handle
 ;;   pythagorean 5 15
 ;;
-(testA
+(test-handler
  "pythagorean choose_all 2"
  '(#(5 12 13) #(6 8 10) #(8 15 17) #(9 12 15))
  (handle-with choose-all
@@ -235,7 +235,7 @@
 ;; with backtrack handle
 ;;   place 1 []
 ;;
-(testA
+(test-handler
  "8 queen place backtrack"
  '(#(8 5) #(7 7) #(6 2) #(5 6) #(4 3) #(3 1) #(2 4) #(1 8))
  (handle-with backtrack

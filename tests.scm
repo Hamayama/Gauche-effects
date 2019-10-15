@@ -25,7 +25,7 @@
 (define-syntax check-equal?
   (syntax-rules ()
     [(_ expr expected description)
-     (testA description expected expr)]))
+     (test-handler description expected expr)]))
 
 (check-equal?
  (handle-with* ((make-handler

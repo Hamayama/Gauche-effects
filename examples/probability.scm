@@ -72,7 +72,7 @@
 ;;   let y = uniform [1.; 2.; 3.; 4.; 5.; 6.] in
 ;;   x +. y
 ;;
-(testA
+(test-handler
  "expectation"
  7
  (handle-with expectation
@@ -133,7 +133,7 @@
 ;;   let y = uniform [1; 2; 3; 4; 5; 6] in
 ;;   x + y
 ;;
-(testA
+(test-handler
  "distribution"
  '(#(12 1/36) #(11 2/36) #(10 3/36) #( 9 4/36) #( 8 5/36) #( 7 6/36)
    #( 6 5/36) #( 5 4/36) #( 4 3/36) #( 3 2/36) #( 2 1/36))

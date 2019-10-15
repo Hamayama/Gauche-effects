@@ -1,5 +1,7 @@
 # Gauche-effects
 
+![image](image.png)
+
 ## 概要
 - https://github.com/ayatoy/racket-effects  
   を、Gauche で動作するように改造したものです。
@@ -50,6 +52,7 @@
 - 2019-8-31  v1.11 emu-dynamic.scmをv4.05に更新(emu-call/pcの処理見直し)
 - 2019-9-8   v1.12 emu-dynamic.scmをv4.06に更新(多値のテスト追加)
 - 2019-9-15  v1.13 emu-dynamic.scmをv4.07に更新(ログ追加)
+- 2019-10-15 v1.14 testA を test-handler に名称変更
 
 
-(2019-9-15)
+(2019-10-15)

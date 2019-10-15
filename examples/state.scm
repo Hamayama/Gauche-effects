@@ -32,7 +32,7 @@
 ;; in
 ;; f 30
 ;;
-(testA
+(test-handler
  "monad-state"
  70
  (let ((f (handle-with monad-state
@@ -62,7 +62,7 @@
 ;;   perform (Set (2 * x));
 ;;   perform Get + 10
 ;;
-(testA
+(test-handler
  "better-state"
  '(70 60)
  (handle-with (better-state 30)

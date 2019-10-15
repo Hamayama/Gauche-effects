@@ -1,6 +1,6 @@
 ;;
 ;; effects.scm
-;; 2019-8-18 v1.03
+;; 2019-10-15 v1.14
 ;;
 ;; modified for Gauche ( https://github.com/Hamayama/Gauche-effects )
 ;; ( the original is https://github.com/ayatoy/racket-effects )
@@ -14,7 +14,7 @@
   (export
     make-handler define-handler
     perform with-handler handle-with handle-with* handle
-    testA))
+    test-handler))
 (select-module effects)
 
 ;; prepare Gauche's reset/shift
@@ -22,7 +22,7 @@
 (cond
  [*use-native-reset*
   ;; use native reset/shift
-  (define testA test*)]
+  (define test-handler test*)]
  [else
   ;; use emulator of reset/shift
   (define dynamic-wind emu-dynamic-wind)
@@ -31,7 +31,7 @@
   (define reset        emu-reset)
   (define shift        emu-shift)
   (define parameterize emu-parameterize)
-  (define testA (with-module emu-dynamic testA))])
+  (define test-handler (with-module emu-dynamic testA))])
 
 ;; Racket's definition
 (define null '())

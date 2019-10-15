@@ -3,7 +3,7 @@
 ![image](image.png)
 
 ## 概要
-- https://github.com/ayatoy/racket-effects  
+- https://github.com/ayatoy/racket-effects (コミット b517a99 (2019-6-2))  
   を、Gauche で動作するように改造したものです。
 
 

@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-9-15 v4.07
+;; 2019-10-23 v4.08
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -149,8 +149,7 @@
 
 (define (emu-call/pc proc)
   (let* ([dp-pc    *dynamic-chain*]
-         [rp-pc    *reset-chain*]
-         [dp-reset (~ (car rp-pc) 'dynamic-chain)]
+         [dp-reset (~ (car *reset-chain*) 'dynamic-chain)]
          [dc-part  (%dc-cut dp-reset dp-pc)]
          [dbg-id   (gensym)])
     (dbg-print 2 "emu-call/pc ~s~%" dbg-id)
@@ -161,17 +160,21 @@
                          (dbg-print 2 "emu-pc-k ~s~%" dbg-id)
                          (receive ret (emu-reset
                                        :name "emu-reset-1"
+                                       ;; using 'dc-part' reduces the redundant
+                                       ;; calls of before/after in '%travel'
                                        ;(%travel dp-k dp-pc)
                                        (%travel dp-k (append dc-part dp-k))
                                        (apply real-k args))
                            (dbg-print 2 "emu-pc-k-after ~s~%" dbg-id)
                            (%travel *dynamic-chain* dp-k)
                            (apply values ret))))])
-         ;; 'proc' must be executed on the outside of 'reset'
-         ;; (incomplete for now)
+         ;; 'proc' must be executed on the outside of 'reset', but for now
+         ;; it's not. we only execute '%travel' before 'proc' to simulate
+         ;; its behavior (incomplete).
          (%travel dp-pc dp-reset)
          (receive ret (proc emu-k)
            (dbg-print 2 "emu-call/pc-after ~s~%" dbg-id)
+           ;(%travel dp-pc dp-reset)
            (apply values ret)))))))
 
 (define-syntax emu-shift

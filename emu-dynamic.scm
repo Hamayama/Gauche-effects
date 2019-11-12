@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-10-23 v4.08
+;; 2019-11-12 v5.00
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -115,22 +115,6 @@
   (take dp-to (- (length dp-to)
                  (length (%common-tail dp-from dp-to)))))
 
-(define (emu-call/cc proc)
-  (let ([dp-cc  *dynamic-chain*]
-        [rp-cc  *reset-chain*]
-        [dbg-id (gensym)])
-    (dbg-print 2 "emu-call/cc ~s~%" dbg-id)
-    (call/cc
-     (^[real-k]
-       (let ([emu-k (^ args
-                       (dbg-print 2 "emu-cc-k ~s~%" dbg-id)
-                       (%travel *dynamic-chain* dp-cc)
-                       (set! *reset-chain* rp-cc)
-                       (apply real-k args))])
-         (receive ret (proc emu-k)
-           (dbg-print 2 "emu-call/cc-after ~s~%" dbg-id)
-           (apply values ret)))))))
-
 (define (%emu-reset thunk :optional (dbg-name ""))
   (let ([dbg-id (gensym)])
     (dbg-print 2 "%emu-reset ~a ~s~%" dbg-name dbg-id)
@@ -147,6 +131,33 @@
     [(_ expr ...)
      (%emu-reset (^[] expr ...))]))
 
+(define (emu-call/cc proc)
+  (let ([dp-cc  *dynamic-chain*]
+        [rp-cc  *reset-chain*]
+        [dbg-id (gensym)])
+    (dbg-print 2 "emu-call/cc ~s~%" dbg-id)
+    (call/cc
+     (^[real-k]
+       (let ([emu-k (^ args
+                       (let ([dp-k *dynamic-chain*]
+                             [rp-k *reset-chain*])
+                         (dbg-print 2 "emu-cc-k ~s~%" dbg-id)
+                         (receive ret (emu-reset
+                                       :name "emu-reset-in-emu-cc-k"
+                                       (%travel dp-k dp-cc)
+                                       (set! *reset-chain* rp-cc)
+                                       (apply real-k args))
+                           ;; in normal case, we don't reach here, but
+                           ;; if we jumped into partial continuation,
+                           ;; we might return here.
+                           (dbg-print 2 "emu-cc-k-after ~s~%" dbg-id)
+                           (set! *reset-chain* rp-k)
+                           (%travel *dynamic-chain* dp-k)
+                           (apply values ret))))])
+         (receive ret (proc emu-k)
+           (dbg-print 2 "emu-call/cc-after ~s~%" dbg-id)
+           (apply values ret)))))))
+
 (define (emu-call/pc proc)
   (let* ([dp-pc    *dynamic-chain*]
          [dp-reset (~ (car *reset-chain*) 'dynamic-chain)]
@@ -159,7 +170,7 @@
                        (let ([dp-k *dynamic-chain*])
                          (dbg-print 2 "emu-pc-k ~s~%" dbg-id)
                          (receive ret (emu-reset
-                                       :name "emu-reset-1"
+                                       :name "emu-reset-in-emu-pc-k"
                                        ;; using 'dc-part' reduces the redundant
                                        ;; calls of before/after in '%travel'
                                        ;(%travel dp-k dp-pc)
@@ -303,6 +314,74 @@
              (display (map (^[dp] (~ dp 'dbg-name)) *dynamic-chain*))
              (display (map (^[rp] (~ rp 'dbg-name)) *reset-chain*))
              )))
+
+  ;; these tests cause SEGV before pull request #545
+  (when #f
+    (testA "reset/shift + call/cc 2"
+           "[r01][s01][s02][s02]"
+           (with-output-to-string
+             (^[]
+               (define k1 #f)
+               (define k2 #f)
+               (emu-reset
+                (display "[r01]")
+                (emu-shift k (set! k1 k))
+                (display "[s01]")
+                (emu-call/cc (lambda (k) (set! k2 k)))
+                (display "[s02]"))
+               (k1)
+               (emu-reset (emu-reset (k2))))))
+
+    (testA "reset/shift + call/cc 2-B"
+           "[r01][s01]"
+           (with-output-to-string
+             (^[]
+               (define k1 #f)
+               (define k2 #f)
+               (emu-reset
+                (display "[r01]")
+                (emu-shift k (set! k1 k))
+                (display "[s01]")
+                (emu-call/cc (lambda (k) (set! k2 k)))
+                ;; empty after call/cc
+                ;(display "[s02]")
+                )
+               (k1)
+               (emu-reset (emu-reset (k2))))))
+
+    (testA "reset/shift + call/cc 2-C"
+           "[d01][d02][d03][d01][s01][s02][d03][d01][s02][d03]"
+           (with-output-to-string
+             (^[]
+               (define k1 #f)
+               (define k2 #f)
+               (emu-reset
+                (emu-dynamic-wind
+                 (^[] (display "[d01]"))
+                 (^[] (display "[d02]")
+                      (emu-shift k (set! k1 k))
+                      (display "[s01]")
+                      (emu-call/cc (lambda (k) (set! k2 k)))
+                      (display "[s02]"))
+                 (^[] (display "[d03]"))))
+               (k1)
+               (emu-reset (emu-reset (k2))))))
+
+    (testA "reset/shift + call/cc 3"
+           "[r01][s01][s01]"
+           (with-output-to-string
+             (^[]
+               (define k1 #f)
+               (define k2 #f)
+               (emu-reset
+                (display "[r01]")
+                (emu-call/cc (lambda (k)
+                               (set! k1 k)
+                               (emu-shift k (set! k2 k))))
+                (display "[s01]"))
+               (k2)
+               (emu-reset (k1)))))
+    )
 
   (testA "dynamic-wind + reset/shift 1"
          "[d01][d02][d03][d04]"

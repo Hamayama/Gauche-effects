@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-11-12 v5.00
+;; 2019-11-13 v5.01
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -148,7 +148,7 @@
                                        (set! *reset-chain* rp-cc)
                                        (apply real-k args))
                            ;; in normal case, we don't reach here, but
-                           ;; if we jumped into partial continuation,
+                           ;; if we've jumped into partial continuation,
                            ;; we might return here.
                            (dbg-print 2 "emu-cc-k-after ~s~%" dbg-id)
                            (set! *reset-chain* rp-k)

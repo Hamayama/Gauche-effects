@@ -1,6 +1,6 @@
 ;;
 ;; effects.scm
-;; 2019-10-15 v1.14
+;; 2019-12-17 v1.18
 ;;
 ;; modified for Gauche ( https://github.com/Hamayama/Gauche-effects )
 ;; ( the original is https://github.com/ayatoy/racket-effects )
@@ -19,19 +19,22 @@
 
 ;; prepare Gauche's reset/shift
 (define *use-native-reset* #f)
-(cond
- [*use-native-reset*
-  ;; use native reset/shift
-  (define test-handler test*)]
- [else
+(define dynamic-wind (with-module scheme           dynamic-wind))
+(define call/cc      (with-module scheme           call/cc))
+(define call/pc      (with-module gauche.partcont  call/pc))
+(define reset        (with-module gauche.partcont  reset))
+(define shift        (with-module gauche.partcont  shift))
+(define parameterize (with-module gauche.parameter parameterize))
+(define test-handler (with-module gauche.test      test*))
+(unless *use-native-reset*
   ;; use emulator of reset/shift
-  (define dynamic-wind emu-dynamic-wind)
-  (define call/cc      emu-call/cc)
-  (define call/pc      emu-call/pc)
-  (define reset        emu-reset)
-  (define shift        emu-shift)
-  (define parameterize emu-parameterize)
-  (define test-handler (with-module emu-dynamic testA))])
+  (set! dynamic-wind emu-dynamic-wind)
+  (set! call/cc      emu-call/cc)
+  (set! call/pc      emu-call/pc)
+  (set! reset        emu-reset)
+  (set! shift        emu-shift)
+  (set! parameterize emu-parameterize)
+  (set! test-handler (with-module emu-dynamic testA)))
 
 ;; Racket's definition
 (define null '())

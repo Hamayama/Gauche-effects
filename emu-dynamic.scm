@@ -1,6 +1,6 @@
 ;;
 ;; emu-dynamic.scm
-;; 2019-11-13 v5.01
+;; 2019-12-17 v5.04
 ;;
 ;; Emulate dynamic-wind and reset/shift on Gauche
 ;;
@@ -29,6 +29,7 @@
   (use gauche.partcont)
   (use gauche.parameter)
   (use gauche.test)
+  (use gauche.version)
   (export
     emu-dynamic-wind
     emu-call/cc emu-call/pc
@@ -150,6 +151,12 @@
                            ;; in normal case, we don't reach here, but
                            ;; if we've jumped into partial continuation,
                            ;; we might return here.
+                           ;;
+                           ;; (for now, there is a problem. Gauche's return
+                           ;;  position of full continuation is outside of
+                           ;;  the most outer 'reset'. Thus, following code
+                           ;;  might be skipped unexpectedly.)
+                           ;;
                            (dbg-print 2 "emu-cc-k-after ~s~%" dbg-id)
                            (set! *reset-chain* rp-k)
                            (%travel *dynamic-chain* dp-k)
@@ -315,8 +322,8 @@
              (display (map (^[rp] (~ rp 'dbg-name)) *reset-chain*))
              )))
 
-  ;; these tests cause SEGV before pull request #545
-  (when #f
+  ;; these tests fail before Gauche's pull request #548
+  (when (version>=? (gauche-version) "0.9.9")
     (testA "reset/shift + call/cc 2"
            "[r01][s01][s02][s02]"
            (with-output-to-string
@@ -366,6 +373,49 @@
                  (^[] (display "[d03]"))))
                (k1)
                (emu-reset (emu-reset (k2))))))
+
+    (testA "reset/shift + call/cc 2-D (from Kahua nqueen broken)"
+           "[r01][s01][s02][d01][d02][d03][s02][d01]12345[d03]"
+           (with-output-to-string
+             (^[]
+               (define k1 #f)
+               (define k2 #f)
+               (emu-reset
+                (display "[r01]")
+                (emu-shift k (set! k1 k))
+                (display "[s01]")
+                (emu-call/cc (lambda (k) (set! k2 k)))
+                (display "[s02]")
+                12345)
+               (k1)
+               (emu-dynamic-wind
+                (^[] (display "[d01]"))
+                (^[] (display "[d02]")
+                     ;; for now, doesn't work with 'reset'
+                     ;(display (emu-reset (emu-reset (k2))))
+                     (display (k2))
+                     )
+                (^[] (display "[d03]"))))))
+
+    (testA "reset/shift + call/cc 2-E (check return position)"
+           "[r01][s01][s02][s02][end]"
+           (with-output-to-string
+             (^[]
+               (define k1 #f)
+               (define k2 #f)
+               (emu-reset
+                (display "[r01]")
+                (emu-shift k (set! k1 k))
+                (display "[s01]")
+                (emu-call/cc (lambda (k) (set! k2 k)))
+                (display "[s02]"))
+               (k1)
+               ;; for now, doesn't work with 'reset'
+               ;(emu-reset (emu-reset (k2))
+               ;           (display "[end]"))
+               (k2)
+               (display "[end]")
+               )))
 
     (testA "reset/shift + call/cc 3"
            "[r01][s01][s01]"

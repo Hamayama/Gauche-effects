@@ -20,7 +20,9 @@
    ( https://github.com/shirok/Gauche/issues/477 )  
    このため、emu-dynamic.scm というモジュールを作って、動作をエミュレートしています。  
    (このモジュールを使用する場合、Gauche 本体の継続や動的環境処理と組み合わせると、  
-   正常に動作しない場合があるため、注意してください)
+   正常に動作しない場合があるため、注意してください)  
+   → Gauche v0.9.9 から、effects.scm 内の `*use-native-reset*` を #t に設定すると、  
+   Gauche 本体の手続きのみで動作可能になりました (2019-12-19) 。
 
 2. オリジナルの effects では、prompt-at/control-at を使用していますが、  
    Gauche には存在しないため、reset/shift に置き換えています。  
@@ -34,6 +36,7 @@
 - OS
   - Windows 8.1 (64bit)
 - 言語
+  - Gauche v0.9.9
   - Gauche v0.9.8
 
 ## 履歴
@@ -60,4 +63,4 @@
   emu-dynamic.scmをv5.04に更新(テスト追加等)
 
 
-(2019-12-17)
+(2019-12-19)
